@@ -40,10 +40,8 @@ export default registerAs('app', () => {
     abandonedCartTimeMinutes:
       parseInt(process.env.ABANDONED_CART_TIME_MINUTES, 10) || 5,
     cookieSecure: process.env.COOKIE_SECURE === 'true',
-    cookieSameSite: (process.env.COOKIE_SAME_SITE as
-      | 'lax'
-      | 'strict'
-      | 'none') || 'lax',
+    cookieSameSite:
+      (process.env.COOKIE_SAME_SITE as 'lax' | 'strict' | 'none') || 'lax',
   };
 
   const validatedConfig = plainToClass(AppConfig, config, {
