@@ -27,5 +27,5 @@ export class CartItem {
   updatedAt!: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 }

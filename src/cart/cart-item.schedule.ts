@@ -4,21 +4,24 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, Raw } from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { Product } from '../products/product.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CartItemSchedule {
   private readonly logger = new Logger(CartItemSchedule.name);
-
-  // this can be configured as needed, best way put into a database config, each org can control there own time
-  private readonly ABANDONED_TIME_MINUTES = 5;
+  private readonly ABANDONED_TIME_MINUTES: number;
 
   constructor(
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
     private readonly dataSource: DataSource,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.ABANDONED_TIME_MINUTES = this.configService.get<number>(
+      'app.abandonedCartTimeMinutes',
+    );
+  }
 
-  // this cron job runs every minute to check for abandoned cart items
   @Cron(CronExpression.EVERY_MINUTE)
   async handleCron() {
     this.logger.debug('Checking for abandoned cart items...');

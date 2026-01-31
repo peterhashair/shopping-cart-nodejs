@@ -3,13 +3,15 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { TypeOrmExceptionFilter } from './common/filters/typeorm-exception.filter';
 import cookieParser from 'cookie-parser';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: configService.get<string>('app.frontendUrl'),
     credentials: true,
   });
   app.useGlobalPipes(
@@ -20,6 +22,6 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new TypeOrmExceptionFilter());
-  await app.listen(3000);
+  await app.listen(configService.get<number>('app.port'));
 }
-void bootstrap();
+bootstrap();

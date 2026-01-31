@@ -14,10 +14,14 @@ import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { Cart } from './cart.entity';
 import type { Request, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly cartService: CartService) {}
+  constructor(
+    private readonly cartService: CartService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get()
   async getCart(@Req() req: Request): Promise<Cart> {
@@ -41,8 +45,10 @@ export class CartController {
     if (!cartId) {
       res.cookie('cartId', cart.id, {
         httpOnly: true,
-        // secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-        // sameSite: 'strict',
+        secure: this.configService.get<boolean>('app.cookieSecure'),
+        sameSite: this.configService.get<'lax' | 'strict' | 'none'>(
+          'app.cookieSameSite',
+        ),
       });
     }
 

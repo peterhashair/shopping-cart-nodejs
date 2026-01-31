@@ -41,7 +41,7 @@ export class OrderService {
       await this.dataSource.transaction(async (manager) => {
         await manager.save(Order, order);
         await manager.remove(CartItem, cart.items);
-        await manager.save(Cart, { ...cart, items: [] });
+        await manager.save(Cart, { ...cart, items: [], deletedAt: new Date() });
       });
 
       return order;

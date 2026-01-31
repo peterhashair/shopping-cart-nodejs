@@ -5,9 +5,9 @@ import {
   Min,
   Max,
   validateSync,
-  ValidateNested,
+  IsBoolean,
 } from 'class-validator';
-import { plainToClass, Type } from 'class-transformer';
+import { plainToClass } from 'class-transformer';
 
 class AppConfig {
   @IsString()
@@ -17,23 +17,36 @@ class AppConfig {
   @Min(0)
   @Max(65535)
   port: number;
+
+  @IsString()
+  frontendUrl: string;
+
+  @IsInt()
+  @Min(1)
+  abandonedCartTimeMinutes: number;
+
+  @IsBoolean()
+  cookieSecure: boolean;
+
+  @IsString()
+  cookieSameSite: 'lax' | 'strict' | 'none';
 }
 
-class Config {
-  @ValidateNested()
-  @Type(() => AppConfig)
-  app: AppConfig;
-}
-
-export default registerAs('config', () => {
+export default registerAs('app', () => {
   const config = {
-    app: {
-      host: process.env.APP_HOST || 'localhost',
-      port: parseInt(process.env.APP_PORT, 10) || 3000,
-    },
+    host: process.env.APP_HOST || 'localhost',
+    port: parseInt(process.env.APP_PORT, 10) || 3000,
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+    abandonedCartTimeMinutes:
+      parseInt(process.env.ABANDONED_CART_TIME_MINUTES, 10) || 5,
+    cookieSecure: process.env.COOKIE_SECURE === 'true',
+    cookieSameSite: (process.env.COOKIE_SAME_SITE as
+      | 'lax'
+      | 'strict'
+      | 'none') || 'lax',
   };
 
-  const validatedConfig = plainToClass(Config, config, {
+  const validatedConfig = plainToClass(AppConfig, config, {
     enableImplicitConversion: true,
   });
   const errors = validateSync(validatedConfig, {

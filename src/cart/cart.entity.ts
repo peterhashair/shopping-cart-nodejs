@@ -20,7 +20,7 @@ export class Cart {
   updatedAt!: Date;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @DeleteDateColumn()
   deletedAt?: Date;
