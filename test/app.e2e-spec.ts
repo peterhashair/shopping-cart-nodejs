@@ -1,27 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
-import cookieParser from 'cookie-parser';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { TestModule } from './test.module';
+import Redis from 'ioredis';
+import { DataSource } from 'typeorm';
 
-describe('App (e2e)', () => {
+describe('AppController (e2e)', () => {
   let app: INestApplication;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [TestModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.use(cookieParser());
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
   });
 
   afterAll(async () => {
+    // 1. Close the Nest app (this should trigger OnModuleDestroy)
     await app.close();
   });
 
-  it('should be defined', () => {
-    expect(app).toBeDefined();
+  it('/health (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect('Hello World!');
   });
 });
