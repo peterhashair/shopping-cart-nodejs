@@ -8,11 +8,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 import { Cart } from './cart.entity';
 import { CartItem } from './cart-item.entity';
 import { Product } from 'src/products/product.entity';
 import { RedisLockService } from 'src/redis/redisLockService';
+import { OrderService } from 'src/order/order.service';
 
 @Injectable()
 export class CartService {
@@ -24,6 +24,7 @@ export class CartService {
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly lockService: RedisLockService,
+    private readonly orderService: OrderService,
   ) {}
 
   async getCart(cartId: string): Promise<Cart> {
@@ -118,7 +119,7 @@ export class CartService {
     return this.lockService.withLock(`cart:${cartId}`, async () => {
       const cart = await this.cartRepository.findOne({
         where: { id: cartId },
-        relations: ['items'],
+        relations: ['items', 'items.product'],
       });
       if (!cart || cart.items.length === 0) {
         throw new NotFoundException('Cart is empty or not found');
@@ -127,9 +128,7 @@ export class CartService {
       // In a real application, you would process the payment here.
       // For this example, we'll just clear the cart.
 
-      await this.cartItemRepository.remove(cart.items);
-      cart.items = [];
-      await this.cartRepository.save(cart);
+      await this.orderService.createOrderFromCart(cart);
 
       return { message: 'Checkout successful' };
     });

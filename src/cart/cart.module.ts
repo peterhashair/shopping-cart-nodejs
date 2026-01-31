@@ -6,11 +6,13 @@ import { RedisModule } from '../redis/redis.module';
 import { CartService } from './cart.service';
 import { Product } from 'src/products/product.entity';
 import { CartController } from './cart.controller';
+import { OrderModule } from 'src/order/order.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Cart, CartItem, Product]),
     RedisModule,
+    OrderModule,
   ],
   providers: [CartService],
   controllers: [CartController],
