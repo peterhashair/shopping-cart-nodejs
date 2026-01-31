@@ -8,6 +8,7 @@ import {
   Get,
   Req,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
@@ -21,6 +22,9 @@ export class CartController {
   @Get()
   async getCart(@Req() req: Request): Promise<Cart> {
     const cartId = req.cookies['cartId'];
+    if (!cartId) {
+      throw new BadRequestException('Cart session not found.');
+    }
     return this.cartService.getCart(cartId);
   }
 
@@ -51,12 +55,18 @@ export class CartController {
     @Param('itemId', ParseUUIDPipe) itemId: string,
   ): Promise<Cart> {
     const cartId = req.cookies['cartId'];
+    if (!cartId) {
+      throw new BadRequestException('Cart session not found.');
+    }
     return this.cartService.removeFromCart(cartId, itemId);
   }
 
   @Post('checkout')
   async checkout(@Req() req: Request): Promise<{ message: string }> {
     const cartId = req.cookies['cartId'];
+    if (!cartId) {
+      throw new BadRequestException('Cart session not found.');
+    }
     return this.cartService.checkout(cartId);
   }
 }

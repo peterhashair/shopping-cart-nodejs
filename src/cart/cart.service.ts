@@ -85,6 +85,9 @@ export class CartService {
     });
   }
 
+  /***
+   * Remove item from cart and revert stock
+   */
   async removeFromCart(cartId: string, cartItemId: string): Promise<Cart> {
     return this.lockService.withLock(`cart:${cartId}`, async () => {
       const cart = await this.cartRepository.findOne({
@@ -115,6 +118,9 @@ export class CartService {
     });
   }
 
+  /***
+   * Checkout the cart by creating an order and clearing the cart items
+   */
   async checkout(cartId: string): Promise<{ message: string }> {
     return this.lockService.withLock(`cart:${cartId}`, async () => {
       const cart = await this.cartRepository.findOne({

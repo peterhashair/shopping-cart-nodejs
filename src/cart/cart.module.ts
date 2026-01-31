@@ -7,6 +7,7 @@ import { CartService } from './cart.service';
 import { Product } from 'src/products/product.entity';
 import { CartController } from './cart.controller';
 import { OrderModule } from 'src/order/order.module';
+import { CartItemSchedule } from './cart-item.schedule';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { OrderModule } from 'src/order/order.module';
     RedisModule,
     OrderModule,
   ],
-  providers: [CartService],
+  providers: [CartService, CartItemSchedule],
   controllers: [CartController],
 })
 export class CartModule {}

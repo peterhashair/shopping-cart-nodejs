@@ -8,6 +8,7 @@ import { HealthModule } from './health/health.module';
 import redisConfig from './config/redis.config';
 import { RedisModule } from './redis/redis.module';
 import { CartModule } from './cart/cart.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -22,10 +23,11 @@ import { CartModule } from './cart/cart.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     RedisModule,
     HealthModule,
     ProductModule,
-    CartModule
+    CartModule,
   ],
 })
 export class AppModule {}
