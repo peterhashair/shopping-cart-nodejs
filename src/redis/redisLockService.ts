@@ -12,6 +12,7 @@ export class RedisLockService implements OnModuleDestroy {
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
     private readonly configService: ConfigService,
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     this.redlock = new Redlock([this.redisClient as any], {
       driftFactor: 0.01,
       retryCount: 10,
@@ -39,6 +40,7 @@ export class RedisLockService implements OnModuleDestroy {
     try {
       return await task();
     } finally {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       await (lock as any).release();
     }
   }
