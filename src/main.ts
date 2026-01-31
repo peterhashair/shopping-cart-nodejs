@@ -24,4 +24,4 @@ async function bootstrap() {
   app.useGlobalFilters(new TypeOrmExceptionFilter());
   await app.listen(configService.get<number>('app.port'));
 }
-void bootstrap();
+bootstrap().catch((err) => console.error(err));

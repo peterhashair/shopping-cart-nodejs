@@ -1,13 +1,17 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 import Redlock from 'redlock';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class RedisLockService {
+export class RedisLockService implements OnModuleDestroy {
   private redlock: Redlock;
+  private readonly REDIS_LOCK_TTL: number;
 
-  constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  constructor(
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+    private readonly configService: ConfigService,
+  ) {
     this.redlock = new Redlock([this.redisClient as any], {
       driftFactor: 0.01,
       retryCount: 10,
@@ -15,33 +19,31 @@ export class RedisLockService {
       retryJitter: 200,
     });
 
-    // Essential: Handle errors so they don't crash the process
+    this.REDIS_LOCK_TTL = this.configService.get<number>('redis.redisLockTTL');
+
     this.redlock.on('clientError', (err: Error) => {
       if (err.name === 'ExecutionError') {
         console.error('A redis error has occurred:', err);
+      } else {
+        // Log other Redlock client errors without re-throwing to prevent process crashes
+        console.error('Redlock client error:', err);
       }
-      throw err;
     });
   }
 
-  /**
-   * withLock wraps a task in a distributed lock.
-   * Uses the 'using' pattern to handle auto-release and clock drift.
-   */
   async withLock<T>(resource: string, task: () => Promise<T>): Promise<T> {
-    const lock = await this.redlock.acquire([`locks:${resource}`], 5000);
+    const lock = await this.redlock.acquire(
+      [`locks:${resource}`],
+      this.REDIS_LOCK_TTL,
+    );
     try {
       return await task();
     } finally {
-      // Release the lock.
-      /* eslint-disable @typescript-eslint/no-unsafe-call */
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       await (lock as any).release();
     }
   }
 
   onModuleDestroy() {
-    // Clean up connections if necessary
     this.redlock.quit();
   }
 }
