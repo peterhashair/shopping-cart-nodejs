@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, DataSource, Raw } from 'typeorm';
+import { Repository, DataSource, Raw } from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { Product } from '../products/product.entity';
 

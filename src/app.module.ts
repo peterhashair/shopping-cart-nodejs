@@ -18,8 +18,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ...configService.get('database'),
+      useFactory: async (configService: ConfigService) => ({
+        ...(await configService.get('database')), // Await the config
       }),
       inject: [ConfigService],
     }),

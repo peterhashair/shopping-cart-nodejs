@@ -1,18 +1,15 @@
 import { registerAs } from '@nestjs/config';
-import { IsString, IsInt, Min, Max, validateSync, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  Min,
+  Max,
+  validateSync,
+  ValidateNested,
+} from 'class-validator';
 import { plainToClass, Type } from 'class-transformer';
 
 class AppConfig {
-  @IsString()
-  host: string;
-
-  @IsInt()
-  @Min(0)
-  @Max(65535)
-  port: number;
-}
-
-class RedisConfig {
   @IsString()
   host: string;
 
@@ -34,11 +31,14 @@ export default registerAs('config', () => {
       host: process.env.APP_HOST || 'localhost',
       port: parseInt(process.env.APP_PORT, 10) || 3000,
     },
-  
   };
 
-  const validatedConfig = plainToClass(Config, config, { enableImplicitConversion: true });
-  const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+  const validatedConfig = plainToClass(Config, config, {
+    enableImplicitConversion: true,
+  });
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
 
   if (errors.length > 0) {
     throw new Error(errors.toString());

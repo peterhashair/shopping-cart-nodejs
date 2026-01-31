@@ -46,7 +46,7 @@ export class OrderService {
 
       return order;
     } catch (error) {
-      throw new Error('Failed to create order from cart');
+      throw new Error('Failed to create order from cart', { cause: error });
     }
   }
 

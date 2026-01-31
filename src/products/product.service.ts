@@ -32,7 +32,9 @@ export class ProductService {
     try {
       return await this.productRepository.save(product);
     } catch (error) {
-      if (error.code === '23505') {
+      const driverError = error as { code?: string };
+
+      if (driverError.code === '23505') {
         // 23505 is the code for unique_violation in Postgres
         throw new ConflictException('Product with this name already exists');
       }

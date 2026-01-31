@@ -18,8 +18,12 @@ export default registerAs('redis', () => {
     port: parseInt(process.env.REDIS_PORT, 10) || 6379,
   };
 
-  const validatedConfig = plainToClass(RedisConfig, config, { enableImplicitConversion: true });
-  const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+  const validatedConfig = plainToClass(RedisConfig, config, {
+    enableImplicitConversion: true,
+  });
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
 
   if (errors.length > 0) {
     throw new Error(errors.toString());

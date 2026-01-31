@@ -7,6 +7,7 @@ export class RedisLockService {
   private redlock: Redlock;
 
   constructor(@Inject('REDIS_CLIENT') private readonly redisClient: Redis) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     this.redlock = new Redlock([this.redisClient as any], {
       driftFactor: 0.01,
       retryCount: 10,
@@ -15,7 +16,7 @@ export class RedisLockService {
     });
 
     // Essential: Handle errors so they don't crash the process
-    this.redlock.on('clientError', (err) => {
+    this.redlock.on('clientError', (err: Error) => {
       if (err.name === 'ExecutionError') {
         console.error('A redis error has occurred:', err);
       }
@@ -33,6 +34,8 @@ export class RedisLockService {
       return await task();
     } finally {
       // Release the lock.
+      /* eslint-disable @typescript-eslint/no-unsafe-call */
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       await (lock as any).release();
     }
   }

@@ -15,8 +15,12 @@ export class TypeOrmExceptionFilter implements ExceptionFilter {
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'An internal server error occurred';
 
+    // The driverError property contains the database-specific error.
+    // For PostgreSQL, this is where the error code (e.g., '22P02') is located.
+    const driverError = exception.driverError as { code?: string };
+
     // Check for PostgreSQL's invalid UUID syntax error (code 22P02)
-    if ((exception as any).code === '22P02') {
+    if (driverError?.code === '22P02') {
       statusCode = HttpStatus.BAD_REQUEST;
       message = 'Invalid input syntax for type UUID.';
     }
