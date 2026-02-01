@@ -36,7 +36,9 @@ export default registerAs('app', () => {
   const config = {
     host: process.env.APP_HOST || 'localhost',
     port: parseInt(process.env.APP_PORT, 10) || 3000,
-    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
+    // Use a concrete origin by default to support credentials.
+    // Set FRONTEND_URL env var to override in other environments.
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8081',
     abandonedCartTimeMinutes:
       parseInt(process.env.ABANDONED_CART_TIME_MINUTES, 10) || 5,
     cookieSecure: process.env.COOKIE_SECURE === 'true',

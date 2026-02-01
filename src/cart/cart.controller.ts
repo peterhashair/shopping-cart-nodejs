@@ -25,7 +25,8 @@ export class CartController {
 
   @Get()
   async getCart(@Req() req: Request): Promise<Cart> {
-    const cartId = req.cookies['cartId'] as string | undefined;
+    const cartId =
+      (req.cookies['cartId'] as string | undefined) || req.header('X-Cart-ID');
     if (!cartId) {
       throw new BadRequestException('Cart session not found.');
     }
@@ -38,7 +39,8 @@ export class CartController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<Cart> {
-    const cartId = req.cookies['cartId'] as string | undefined;
+    const cartId =
+      (req.cookies['cartId'] as string | undefined) || req.header('X-Cart-ID');
     const { productId, quantity } = addToCartDto;
     const cart = await this.cartService.addToCart(cartId, productId, quantity);
 
@@ -50,6 +52,7 @@ export class CartController {
           'app.cookieSameSite',
         ),
       });
+      res.setHeader('X-Cart-ID', cart.id);
     }
 
     return cart;
@@ -60,7 +63,8 @@ export class CartController {
     @Req() req: Request,
     @Param('itemId', ParseUUIDPipe) itemId: string,
   ): Promise<Cart> {
-    const cartId = req.cookies['cartId'] as string | undefined;
+    const cartId =
+      (req.cookies['cartId'] as string | undefined) || req.header('X-Cart-ID');
     if (!cartId) {
       throw new BadRequestException('Cart session not found.');
     }
@@ -69,7 +73,8 @@ export class CartController {
 
   @Post('checkout')
   async checkout(@Req() req: Request): Promise<{ message: string }> {
-    const cartId = req.cookies['cartId'] as string | undefined;
+    const cartId =
+      (req.cookies['cartId'] as string | undefined) || req.header('X-Cart-ID');
     if (!cartId) {
       throw new BadRequestException('Cart session not found.');
     }

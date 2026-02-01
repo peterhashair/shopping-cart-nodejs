@@ -30,8 +30,8 @@ export class CartService {
       relations: ['items', 'items.product'],
     });
     if (!cart) {
-      // Optionally, create a new cart if one doesn't exist
-      return this.cartRepository.create({ id: cartId, items: [] });
+      const newCart = this.cartRepository.create({ id: cartId, items: [] });
+      return this.cartRepository.save(newCart);
     }
     return cart;
   }

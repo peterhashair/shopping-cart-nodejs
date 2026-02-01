@@ -13,6 +13,8 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get<string>('app.frontendUrl'),
     credentials: true,
+    allowedHeaders: ['Content-Type', 'X-Cart-ID'],
+    exposedHeaders: ['X-Cart-ID'],
   });
   app.useGlobalPipes(
     new ValidationPipe({
@@ -24,4 +26,4 @@ async function bootstrap() {
   app.useGlobalFilters(new TypeOrmExceptionFilter());
   await app.listen(configService.get<number>('app.port'));
 }
-bootstrap().catch((err) => console.error(err));
+void bootstrap();
