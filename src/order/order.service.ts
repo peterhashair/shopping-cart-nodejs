@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './order.entity';
@@ -8,6 +8,9 @@ import { CartItem } from 'src/cart/cart-item.entity';
 
 @Injectable()
 export class OrderService {
+  // Maximum allowed order total in cents for decimal(10,2): 99,999,999.99
+  private readonly MAX_ORDER_TOTAL_CENTS = 9999999999;
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
@@ -32,10 +35,24 @@ export class OrderService {
         return orderItem;
       });
 
-      order.total = order.items.reduce(
-        (total, item) => total + item.price * item.quantity,
-        0,
-      );
+      // Calculate total - prices are already in cents (from priceCents field)
+      // Order total is stored as cents in a decimal field
+      const calculatedTotal = order.items.reduce((total, item) => {
+        const price = Number(item.price);
+        if (isNaN(price)) {
+          throw new BadRequestException('Invalid price value for order item');
+        }
+        return total + price * item.quantity;
+      }, 0);
+
+      // Ensure result fits in decimal(10,2) - max value is 99,999,999.99 in cents (9,999,999,999)
+      if (calculatedTotal > this.MAX_ORDER_TOTAL_CENTS) {
+        throw new BadRequestException(
+          'Order total exceeds maximum allowed value',
+        );
+      }
+
+      order.total = calculatedTotal;
 
       // clean the cart and save the order in a transaction
       await this.dataSource.transaction(async (manager) => {

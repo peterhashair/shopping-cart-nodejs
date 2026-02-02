@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { TypeOrmExceptionFilter } from './common/filters/typeorm-exception.filter';
 import cookieParser from 'cookie-parser';
 import { ConfigService } from '@nestjs/config';
@@ -26,4 +26,9 @@ async function bootstrap() {
   app.useGlobalFilters(new TypeOrmExceptionFilter());
   await app.listen(configService.get<number>('app.port'));
 }
-void bootstrap();
+
+const logger = new Logger('Bootstrap');
+bootstrap().catch((error) => {
+  logger.error('Failed to start application:', error);
+  process.exit(1);
+});

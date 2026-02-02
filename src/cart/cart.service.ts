@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Cart } from './cart.entity';
 import { CartItem } from './cart-item.entity';
 import { Product } from 'src/products/product.entity';
@@ -22,6 +22,8 @@ export class CartService {
     private readonly productRepository: Repository<Product>,
     private readonly lockService: RedisLockService,
     private readonly orderService: OrderService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async getCart(cartId: string): Promise<Cart> {
@@ -41,7 +43,7 @@ export class CartService {
     productId: string,
     quantity: number,
   ): Promise<Cart> {
-    return this.lockService.withLock(`cart:${productId}`, async () => {
+    return this.lockService.withLock(`product:${productId}`, async () => {
       const product = await this.productRepository.findOne({
         where: { id: productId },
       });
@@ -75,10 +77,25 @@ export class CartService {
         cart.items.push(cartItem);
       }
 
-      product.stock -= quantity;
-      await this.productRepository.save(product);
+      // Use transaction to ensure atomicity of cart save and stock decrement
+      const result = await this.dataSource.transaction(async (manager) => {
+        const savedCart = await manager.save(Cart, cart);
+        product.stock -= quantity;
+        await manager.save(Product, product);
+        return savedCart;
+      });
 
-      return this.cartRepository.save(cart);
+      // Return the updated cart with relations loaded
+      const updatedCart = await this.cartRepository.findOne({
+        where: { id: result.id },
+        relations: ['items', 'items.product'],
+      });
+
+      if (!updatedCart) {
+        throw new NotFoundException('Cart not found after transaction');
+      }
+
+      return updatedCart;
     });
   }
 
