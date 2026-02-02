@@ -32,19 +32,19 @@ export class OrderService {
         return orderItem;
       });
 
-      // Calculate total with proper handling of large numbers
-      // Convert to cents for accurate calculation, then back to decimal
-      const totalInCents = order.items.reduce(
+      // Calculate total - prices are already in cents (from priceCents field)
+      // Order total is stored as cents in a decimal field
+      const calculatedTotal = order.items.reduce(
         (total, item) => total + Number(item.price) * item.quantity,
         0,
       );
 
-      // Ensure result fits in decimal(10,2) - max value is 99,999,999.99
-      if (totalInCents > 9999999999) {
+      // Ensure result fits in decimal(10,2) - max value is 99,999,999.99 in cents (9,999,999,999)
+      if (calculatedTotal > 9999999999) {
         throw new Error('Order total exceeds maximum allowed value');
       }
 
-      order.total = totalInCents;
+      order.total = calculatedTotal;
 
       // clean the cart and save the order in a transaction
       await this.dataSource.transaction(async (manager) => {
