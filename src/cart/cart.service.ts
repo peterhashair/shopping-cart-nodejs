@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Cart } from './cart.entity';
 import { CartItem } from './cart-item.entity';
 import { Product } from 'src/products/product.entity';
@@ -22,6 +22,8 @@ export class CartService {
     private readonly productRepository: Repository<Product>,
     private readonly lockService: RedisLockService,
     private readonly orderService: OrderService,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async getCart(cartId: string): Promise<Cart> {
@@ -75,14 +77,18 @@ export class CartService {
         cart.items.push(cartItem);
       }
 
-      // Save cart first to ensure consistency
-      const savedCart = await this.cartRepository.save(cart);
+      // Use transaction to ensure atomicity of cart save and stock decrement
+      await this.dataSource.transaction(async (manager) => {
+        await manager.save(Cart, cart);
+        product.stock -= quantity;
+        await manager.save(Product, product);
+      });
 
-      // Only decrement stock after cart is successfully saved
-      product.stock -= quantity;
-      await this.productRepository.save(product);
-
-      return savedCart;
+      // Return the updated cart with relations
+      return this.cartRepository.findOne({
+        where: { id: cart.id },
+        relations: ['items', 'items.product'],
+      });
     });
   }
 

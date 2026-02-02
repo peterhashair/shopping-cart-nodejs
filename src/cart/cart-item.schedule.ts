@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { Product } from '../products/product.entity';
@@ -14,6 +14,7 @@ export class CartItemSchedule {
   constructor(
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
+    @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
   ) {

@@ -10,6 +10,8 @@ import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductService {
+  private readonly MAX_PRODUCTS_PER_PAGE = 100;
+
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
@@ -25,7 +27,7 @@ export class ProductService {
     limit: number;
   }> {
     // Enforce maximum limit to prevent DoS
-    const maxLimit = Math.min(limit, 100);
+    const maxLimit = Math.min(limit, this.MAX_PRODUCTS_PER_PAGE);
     const skip = (page - 1) * maxLimit;
 
     const [products, total] = await this.productRepository.findAndCount({
