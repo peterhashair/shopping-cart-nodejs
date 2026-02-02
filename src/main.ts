@@ -26,4 +26,8 @@ async function bootstrap() {
   app.useGlobalFilters(new TypeOrmExceptionFilter());
   await app.listen(configService.get<number>('app.port'));
 }
-void bootstrap();
+
+bootstrap().catch((error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});

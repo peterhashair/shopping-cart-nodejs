@@ -41,7 +41,7 @@ export class CartService {
     productId: string,
     quantity: number,
   ): Promise<Cart> {
-    return this.lockService.withLock(`cart:${productId}`, async () => {
+    return this.lockService.withLock(`product:${productId}`, async () => {
       const product = await this.productRepository.findOne({
         where: { id: productId },
       });
@@ -75,10 +75,14 @@ export class CartService {
         cart.items.push(cartItem);
       }
 
+      // Save cart first to ensure consistency
+      const savedCart = await this.cartRepository.save(cart);
+
+      // Only decrement stock after cart is successfully saved
       product.stock -= quantity;
       await this.productRepository.save(product);
 
-      return this.cartRepository.save(cart);
+      return savedCart;
     });
   }
 

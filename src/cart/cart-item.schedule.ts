@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, Raw } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { Product } from '../products/product.entity';
 import { ConfigService } from '@nestjs/config';
@@ -26,15 +26,17 @@ export class CartItemSchedule {
   async handleCron() {
     this.logger.debug('Checking for abandoned cart items...');
 
-    const abandonedItems = await this.cartItemRepository.find({
-      where: {
-        createdAt: Raw(
-          (alias) =>
-            `${alias} < NOW() - INTERVAL '${this.ABANDONED_TIME_MINUTES} minutes'`,
-        ),
-      },
-      relations: ['product'],
-    });
+    // Calculate the cutoff time in JavaScript to avoid SQL injection
+    const cutoffTime = new Date();
+    cutoffTime.setMinutes(
+      cutoffTime.getMinutes() - this.ABANDONED_TIME_MINUTES,
+    );
+
+    const abandonedItems = await this.cartItemRepository
+      .createQueryBuilder('cartItem')
+      .leftJoinAndSelect('cartItem.product', 'product')
+      .where('cartItem.createdAt < :cutoffTime', { cutoffTime })
+      .getMany();
 
     if (abandonedItems.length === 0) {
       this.logger.debug('No abandoned cart items found.');

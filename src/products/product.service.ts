@@ -15,8 +15,30 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
   ) {}
 
-  async index(): Promise<Product[]> {
-    return this.productRepository.find();
+  async index(
+    page: number = 1,
+    limit: number = 50,
+  ): Promise<{
+    products: Product[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    // Enforce maximum limit to prevent DoS
+    const maxLimit = Math.min(limit, 100);
+    const skip = (page - 1) * maxLimit;
+
+    const [products, total] = await this.productRepository.findAndCount({
+      skip,
+      take: maxLimit,
+    });
+
+    return {
+      products,
+      total,
+      page,
+      limit: maxLimit,
+    };
   }
 
   async get(id: string): Promise<Product> {

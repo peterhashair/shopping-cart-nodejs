@@ -2,6 +2,7 @@ import {
   IsString,
   IsInt,
   Min,
+  Max,
   IsNotEmpty,
   IsOptional,
   IsUUID,
@@ -18,5 +19,6 @@ export class AddToCartDto {
 
   @IsInt()
   @Min(1)
+  @Max(1000) // Prevent DoS attacks with unreasonably large quantities
   quantity: number;
 }
