@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Order } from './order.entity';
@@ -8,6 +8,9 @@ import { CartItem } from 'src/cart/cart-item.entity';
 
 @Injectable()
 export class OrderService {
+  // Maximum allowed order total in cents for decimal(10,2): 99,999,999.99
+  private readonly MAX_ORDER_TOTAL_CENTS = 9999999999;
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
@@ -40,8 +43,10 @@ export class OrderService {
       );
 
       // Ensure result fits in decimal(10,2) - max value is 99,999,999.99 in cents (9,999,999,999)
-      if (calculatedTotal > 9999999999) {
-        throw new Error('Order total exceeds maximum allowed value');
+      if (calculatedTotal > this.MAX_ORDER_TOTAL_CENTS) {
+        throw new BadRequestException(
+          'Order total exceeds maximum allowed value',
+        );
       }
 
       order.total = calculatedTotal;

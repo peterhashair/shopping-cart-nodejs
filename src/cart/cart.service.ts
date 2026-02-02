@@ -78,15 +78,16 @@ export class CartService {
       }
 
       // Use transaction to ensure atomicity of cart save and stock decrement
+      let savedCart: Cart;
       await this.dataSource.transaction(async (manager) => {
-        await manager.save(Cart, cart);
+        savedCart = await manager.save(Cart, cart);
         product.stock -= quantity;
         await manager.save(Product, product);
       });
 
-      // Return the updated cart with relations
+      // Return the updated cart with relations loaded
       return this.cartRepository.findOne({
-        where: { id: cart.id },
+        where: { id: savedCart.id },
         relations: ['items', 'items.product'],
       });
     });
