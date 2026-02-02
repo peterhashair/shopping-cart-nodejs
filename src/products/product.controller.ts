@@ -9,6 +9,7 @@ import {
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -28,6 +29,13 @@ export class ProductController {
     page: number;
     limit: number;
   }> {
+    // Validate positive numbers
+    if (page < 1) {
+      throw new BadRequestException('Page must be greater than 0');
+    }
+    if (limit < 1) {
+      throw new BadRequestException('Limit must be greater than 0');
+    }
     return this.productService.index(page, limit);
   }
 

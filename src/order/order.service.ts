@@ -40,9 +40,7 @@ export class OrderService {
       const calculatedTotal = order.items.reduce((total, item) => {
         const price = Number(item.price);
         if (isNaN(price)) {
-          throw new BadRequestException(
-            `Invalid price value for order item: ${item.price}`,
-          );
+          throw new BadRequestException('Invalid price value for order item');
         }
         return total + price * item.quantity;
       }, 0);

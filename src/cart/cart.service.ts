@@ -86,10 +86,16 @@ export class CartService {
       });
 
       // Return the updated cart with relations loaded
-      return this.cartRepository.findOne({
+      const updatedCart = await this.cartRepository.findOne({
         where: { id: result.id },
         relations: ['items', 'items.product'],
       });
+
+      if (!updatedCart) {
+        throw new NotFoundException('Cart not found after transaction');
+      }
+
+      return updatedCart;
     });
   }
 
