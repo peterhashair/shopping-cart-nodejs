@@ -37,10 +37,15 @@ export class OrderService {
 
       // Calculate total - prices are already in cents (from priceCents field)
       // Order total is stored as cents in a decimal field
-      const calculatedTotal = order.items.reduce(
-        (total, item) => total + Number(item.price) * item.quantity,
-        0,
-      );
+      const calculatedTotal = order.items.reduce((total, item) => {
+        const price = Number(item.price);
+        if (isNaN(price)) {
+          throw new BadRequestException(
+            `Invalid price value for order item: ${item.price}`,
+          );
+        }
+        return total + price * item.quantity;
+      }, 0);
 
       // Ensure result fits in decimal(10,2) - max value is 99,999,999.99 in cents (9,999,999,999)
       if (calculatedTotal > this.MAX_ORDER_TOTAL_CENTS) {
